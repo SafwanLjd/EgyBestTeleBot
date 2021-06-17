@@ -55,7 +55,7 @@ def handleMessages(message):
 
     try:
         if len(text) < 64:
-            results = search(text, timeout=15)
+            results = search(text, timeout=20)
             
             if len(results) > 0:
                 result = results[0]
@@ -72,8 +72,6 @@ def handleMessages(message):
             bot.reply_to(message, '⛔ رسالتك طويلة جدًا ⛔')
     except:
         bot.reply_to(message, '⛔ حدث خطأ ⛔')
-
-
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -102,9 +100,8 @@ def handleCallback(call):
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
             if index == 0:
-                show = search(showTitle, includeMovies=False, timeout=15)[0]
-                requestSeasons(userID, show)
-                bot.delete_message(userID, messageID)
+                show = search(showTitle, includeMovies=False, timeout=20)[0]
+                requestSeasons(userID, show, messageID)
             
             elif index == 1:
                 seasonLink = links[1].url
@@ -125,21 +122,29 @@ def handleCallback(call):
     bot.answer_callback_query(call.id, text=callbackAnswer)
 
 
-def requestSeasons(userID, show):
+def requestSeasons(userID, show, messageID=None):
     seasons = show.getSeasons()
 
     buttons = InlineKeyboardMarkup()
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(seasons[i].title, callback_data=('S' + str(i))))
     
-    try:
-        bot.send_photo(userID, show.posterURL, caption=generateMessageCaption(show.link, show.title, rating=show.rating), reply_markup=buttons, parse_mode='Markdown')
-    except:
+    msgCaption = generateMessageCaption(show.link, show.title, rating=show.rating)
+
+    if not messageID:
         try:
-            image = open('noimage.jpg', 'rb').read()
-            bot.send_photo(userID, image, caption=generateMessageCaption(show.link, show.title, rating=show.rating), reply_markup=buttons, parse_mode='Markdown')
-        except IOError:
-            bot.send_message(userID, '⛔ حدث خطأ ⛔')
+            bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
+        except:
+            try:
+                image = open('noimage.jpg', 'rb').read()
+                bot.send_photo(userID, image, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
+            except IOError:
+                bot.send_message(userID, '⛔ حدث خطأ ⛔')
+    else:
+        try:
+            bot.edit_message_media(InputMediaPhoto(show.posterURL), chat_id=userID, message_id=messageID)
+        finally:
+            bot.edit_message_caption(caption=msgCaption, chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
 
 
 def requestEpisodes(userID,  messageID, showLink, showTitle, season):
