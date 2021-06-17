@@ -100,10 +100,26 @@ def handleCallback(call):
             season = Season(seasonLink)
             episode = season.getEpisodes()[index]
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
+        elif requestType == 'B':
+            if index == 0:
+                show = search(showTitle, includeMovies=False, timeout=15)[0]
+                requestSeasons(userID, show)
+                bot.delete_message(userID, messageID)
+            
+            elif index == 1:
+                seasonLink = links[1].url
+                seasons = show.getSeasons()
+
+                for i in range(len(seasons)):
+                    if seasons[i].link == seasonLink:
+                        season = seasons[i]
+                        break
+
+                requestEpisodes(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, season=season)
         else:
-            bot.delete_message(userID, call.message.id)
+            bot.delete_message(userID, messageID)
             bot.send_message(userID, '⛔ حدث خطأ ⛔')
-    except:
+    except Exception as e:
         callbackAnswer = '⛔ حدث خطأ ⛔'
 
     bot.answer_callback_query(call.id, text=callbackAnswer)
@@ -125,9 +141,10 @@ def requestEpisodes(userID,  messageID, showLink, showTitle, season):
     buttons = InlineKeyboardMarkup()
     for i in range(len(episodes)):
         buttons.add(InlineKeyboardButton(episodes[i].title, callback_data=('E' + str(i))))
+    buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B0'))
 
     bot.edit_message_media(InputMediaPhoto(season.posterURL), chat_id=userID, message_id=messageID)
-    bot.edit_message_caption(caption=generateMessageCaption(showLink, showTitle, season.link, season.title.split(' ')[-1]), chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
+    bot.edit_message_caption(caption=generateMessageCaption(showLink, showTitle, seasonLink=season.link, seasonNum=season.title.split(' ')[-1]), chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
 
 
 def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, seasonLink=None, seasonNum=None, episode=None, isMovie=False):
@@ -140,6 +157,7 @@ def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, sea
     if isMovie:
         bot.send_photo(userID, episode.posterURL, caption= generateMessageCaption(episode.link, episode.title, rating=episode.rating), reply_markup=buttons, parse_mode='Markdown')
     else:
+        buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B1'))
         bot.edit_message_caption(caption=generateMessageCaption(showLink, showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episodeLink=episode.link, episodeNum=episode.title.split(' ')[1], rating=episode.rating), chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
 
 
@@ -153,7 +171,7 @@ def generateMessageCaption(link, title, seasonLink=None, seasonNum=None, episode
         caption += f'\n\nالحلقة: [{episodeNum}]({episodeLink})'
 
     if rating:
-        caption += f'\n\nالتقييم: ⭐ **{rating}/10**'
+        caption += f'\n\nالتقييم: **{rating}/10** ⭐'
 
     return caption
 
