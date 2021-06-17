@@ -67,10 +67,12 @@ def handleMessages(message):
                     requestMediaLinks(userID, episode=result, isMovie=True)
 
             else:
+                print(f'Couldn\'t Find \"{text}\" For [{userID}]')
                 bot.reply_to(message, 'لم أستطع العثور على بحثك في إيجي بيست❗')
         else:
             bot.reply_to(message, '⛔ رسالتك طويلة جدًا ⛔')
-    except:
+    except Exception as exception:
+        print(f'Exception: {exception}')
         bot.reply_to(message, '⛔ حدث خطأ ⛔')
 
 
@@ -136,9 +138,11 @@ def requestSeasons(userID, show, messageID=None):
             bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
         except:
             try:
+                print(f'Couldn\'t Fetch The Poster of \"{show.title}\"')
                 image = open('noimage.jpg', 'rb').read()
                 bot.send_photo(userID, image, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
             except IOError:
+                print(f'Couldn\'t Read \"noimage.jpg\"')
                 bot.send_message(userID, '⛔ حدث خطأ ⛔')
     else:
         try:
