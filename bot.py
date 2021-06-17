@@ -55,7 +55,7 @@ def handleMessages(message):
 
     try:
         if len(text) < 64:
-            results = search(text, timeout=15)
+            results = search(text, timeout=5)
             
             if len(results) > 0:
                 result = results[0]
@@ -102,7 +102,7 @@ def handleCallback(call):
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
             if index == 0:
-                show = search(showTitle, includeMovies=False, timeout=15)[0]
+                show = search(showTitle, includeMovies=False, timeout=5)[0]
                 requestSeasons(userID, show, messageID)
             
             elif index == 1:
