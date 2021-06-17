@@ -131,8 +131,15 @@ def requestSeasons(userID, show):
     buttons = InlineKeyboardMarkup()
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(seasons[i].title, callback_data=('S' + str(i))))
-
-    bot.send_photo(userID, show.posterURL, caption=generateMessageCaption(show.link, show.title, rating=show.rating), reply_markup=buttons, parse_mode='Markdown')
+    
+    try:
+        bot.send_photo(userID, show.posterURL, caption=generateMessageCaption(show.link, show.title, rating=show.rating), reply_markup=buttons, parse_mode='Markdown')
+    except:
+        try:
+            image = open('noimage.jpg', 'rb').read()
+            bot.send_photo(userID, image, caption=generateMessageCaption(show.link, show.title, rating=show.rating), reply_markup=buttons, parse_mode='Markdown')
+        except IOError:
+            bot.send_message(userID, '⛔ حدث خطأ ⛔')
 
 
 def requestEpisodes(userID,  messageID, showLink, showTitle, season):
@@ -143,8 +150,10 @@ def requestEpisodes(userID,  messageID, showLink, showTitle, season):
         buttons.add(InlineKeyboardButton(episodes[i].title, callback_data=('E' + str(i))))
     buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B0'))
 
-    bot.edit_message_media(InputMediaPhoto(season.posterURL), chat_id=userID, message_id=messageID)
-    bot.edit_message_caption(caption=generateMessageCaption(showLink, showTitle, seasonLink=season.link, seasonNum=season.title.split(' ')[-1]), chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
+    try:
+        bot.edit_message_media(InputMediaPhoto(season.posterURL), chat_id=userID, message_id=messageID)
+    finally:
+        bot.edit_message_caption(caption=generateMessageCaption(showLink, showTitle, seasonLink=season.link, seasonNum=season.title.split(' ')[-1]), chat_id=userID, message_id=messageID, reply_markup=buttons, parse_mode='Markdown')
 
 
 def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, seasonLink=None, seasonNum=None, episode=None, isMovie=False):
@@ -177,7 +186,7 @@ def generateMessageCaption(link, title, seasonLink=None, seasonNum=None, episode
 
 
 @server.route("/" + TOKEN, methods=["POST"])
-def getMessageToLoggingBot():
+def getMessageToBot():
 	bot.process_new_updates([telebot.types.Update.de_json(request.stream.read().decode("utf-8"))])
 	return "!", 200
 
