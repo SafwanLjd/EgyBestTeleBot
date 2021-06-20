@@ -211,6 +211,7 @@ def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, sea
         buttons.add(InlineKeyboardButton(str(src.quality) + 'p', url=src.link))
 
     if isMovie:
+        episode.refreshMetadata(posterOnly=True)
         bot.send_photo(userID, episode.posterURL, caption= generateMessageCaption(episode.link, episode.title, rating=episode.rating), reply_markup=buttons, parse_mode='Markdown')
     else:
         buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B1'))
