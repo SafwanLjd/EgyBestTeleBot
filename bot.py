@@ -3,6 +3,8 @@ from flask import Flask, request, redirect
 from waitress import serve
 from egybest import *
 import telebot
+import random
+import imdb
 import yaml
 import os
 
@@ -46,6 +48,34 @@ def helpCommand(message):
     print(f'The User [{userID}] Sent A /help Request')
 
 
+@bot.message_handler(commands=['movie', 'show'], func=lambda msg: len(msg.text.strip().split(' ')) > 1)
+def exclusiveSearch(message):
+    userID = message.from_user.id
+    text = message.text.strip()
+    words = text.split(' ')
+    query = ' '.join(words[1:])
+    command = words[0]
+    print(f'The User [{userID}] Sent \"{text}\"')
+    searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
+
+
+@bot.message_handler(commands=['rand'])
+def randomSelection(message):
+    userID = message.from_user.id
+    
+    isMovie = bool(random.getrandbits(1))
+    rand = random.randrange(0, 250)
+
+    imdbInstance = imdb.IMDb()
+    if isMovie:
+        title = imdbInstance.get_top250_movies()[rand]['title']
+    else:
+        title = imdbInstance.get_top250_tv()[rand]['title']
+    
+    print(f'The User [{userID}] Sent A /rand Request and The Bot Chose \"{title}\"')
+    searchEgyBest(userID, title, message, includeMovies=isMovie, includeShows=(not isMovie))
+
+
 @bot.message_handler(func=lambda msg: msg.text is not None and msg.text[0] != '/')
 def handleMessages(message):
     userID = message.from_user.id
@@ -53,27 +83,7 @@ def handleMessages(message):
     
     print(f'The User [{userID}] Sent \"{text}\"')
 
-    try:
-        if len(text) < 64:
-            results = search(text, timeout=10, retries=3)
-            
-            if len(results) > 0:
-                result = results[0]
-                isShow = isinstance(result, Show)
-                    
-                if isShow:
-                    requestSeasons(userID, result)
-                else:
-                    requestMediaLinks(userID, episode=result, isMovie=True)
-
-            else:
-                print(f'Couldn\'t Find \"{text}\" For [{userID}]')
-                bot.reply_to(message, 'لم أستطع العثور على بحثك في إيجي بيست❗')
-        else:
-            bot.reply_to(message, '⛔ رسالتك طويلة جدًا ⛔')
-    except Exception as exception:
-        print(f'Exception: {exception}')
-        bot.reply_to(message, '⛔ حدث خطأ ⛔')
+    searchEgyBest(userID, text, message)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -124,6 +134,31 @@ def handleCallback(call):
     bot.answer_callback_query(call.id, text=callbackAnswer)
 
 
+def searchEgyBest(userID, query, message, includeMovies=True, includeShows=True):
+    try:
+        if len(query) < 64:
+            results = search(query, includeMovies=includeMovies, includeShows=includeShows, timeout=10, retries=3)
+            
+            if len(results) > 0:
+                result = results[0]
+                isShow = isinstance(result, Show)
+                    
+                if isShow:
+                    requestSeasons(userID, result)
+                else:
+                    requestMediaLinks(userID, episode=result, isMovie=True)
+
+            else:
+                print(f'Couldn\'t Find \"{query}\" For [{userID}]')
+                bot.reply_to(message, 'لم أستطع العثور على بحثك في إيجي بيست❗')
+        else:
+            bot.reply_to(message, '⛔ رسالتك طويلة جدًا ⛔')
+
+    except Exception as exception:
+        print(f'Exception: {exception}')
+        bot.reply_to(message, '⛔ حدث خطأ ⛔')
+
+
 def requestSeasons(userID, show, messageID=None):
     seasons = show.getSeasons()
 
@@ -131,6 +166,7 @@ def requestSeasons(userID, show, messageID=None):
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(seasons[i].title, callback_data=('S' + str(i))))
     
+    show.refreshMetadata(posterOnly=True)
     msgCaption = generateMessageCaption(show.link, show.title, rating=show.rating)
 
     if not messageID:
@@ -158,6 +194,8 @@ def requestEpisodes(userID,  messageID, showLink, showTitle, season):
     for i in range(len(episodes)):
         buttons.add(InlineKeyboardButton(episodes[i].title, callback_data=('E' + str(i))))
     buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B0'))
+
+    season.refreshMetadata(posterOnly=True)
 
     try:
         bot.edit_message_media(InputMediaPhoto(season.posterURL), chat_id=userID, message_id=messageID)
