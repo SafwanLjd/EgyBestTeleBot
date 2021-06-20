@@ -8,6 +8,7 @@ import yaml
 import os
 
 
+EGYBEST_MIRROR = os.environ['EGYBEST_MIRROR']
 
 TOKEN = os.environ['TOKEN']
 bot = telebot.TeleBot(token=TOKEN)
@@ -65,7 +66,7 @@ def randomMovie(message):
     try:
         pageNum = random.randrange(1, 10)
         index = random.randrange(0, 12)
-        eb = EgyBest()
+        eb = EgyBest(EGYBEST_MIRROR)
         movie = eb.getTopMoviesPage(pageNum)[index]
         
         logMessage = f'The User [{userID}] Sent A /rand_movie Request and The Bot Chose \"{movie.title}\"'
@@ -86,7 +87,7 @@ def randomShow(message):
     try:
         pageNum = random.randrange(1, 10)
         index = random.randrange(0, 12)
-        eb = EgyBest()
+        eb = EgyBest(EGYBEST_MIRROR)
         show = eb.getTopShowsPage(pageNum)[index]
         
         logMessage = f'The User [{userID}] Sent A /rand_show Request and The Bot Chose \"{show.title}\"'
@@ -136,7 +137,7 @@ def handleCallback(call):
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
             if index == 0:
-                eb = EgyBest()
+                eb = EgyBest(EGYBEST_MIRROR)
                 show = eb.search(showTitle, includeMovies=False)[0]
                 requestSeasons(userID, show, messageID)
             
@@ -162,7 +163,7 @@ def handleCallback(call):
 def searchEgyBest(userID, query, message, includeMovies=True, includeShows=True):
     try:
         if len(query) < 128:
-            eb = EgyBest()
+            eb = EgyBest(EGYBEST_MIRROR)
             results = eb.search(query, includeMovies=includeMovies, includeShows=includeShows)
             
             if len(results) > 0:
