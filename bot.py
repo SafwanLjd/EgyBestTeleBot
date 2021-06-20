@@ -4,7 +4,6 @@ from waitress import serve
 from egybest import *
 import telebot
 import random
-import imdb
 import yaml
 import os
 
@@ -59,21 +58,46 @@ def exclusiveSearch(message):
     searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
 
 
-@bot.message_handler(commands=['rand'])
-def randomSelection(message):
+@bot.message_handler(commands=['rand_movie'])
+def randomMovie(message):
     userID = message.from_user.id
-    
-    isMovie = bool(random.getrandbits(1))
-    rand = random.randrange(0, 100)
 
-    imdbInstance = imdb.IMDb()
-    if isMovie:
-        title = imdbInstance.get_top250_movies()[rand]['title']
-    else:
-        title = imdbInstance.get_top250_tv()[rand]['title']
+    try:
+        pageNum = random.randrange(1, 10)
+        index = random.randrange(0, 12)
+        eb = EgyBest()
+        movie = eb.getTopMoviesPage(pageNum)[index]
+        
+        logMessage = f'The User [{userID}] Sent A /rand_movie Request and The Bot Chose \"{movie.title}\"'
+        requestMediaLinks(userID, episode=movie, isMovie=True)
     
-    print(f'The User [{userID}] Sent A /rand Request and The Bot Chose \"{title}\"')
-    searchEgyBest(userID, title, message, includeMovies=isMovie, includeShows=(not isMovie))
+    except Exception as exception:
+        logMessage = f'Error Occurred During a /rand_movie Request By The User [{userID}]: {exception}'
+        bot.reply_to(message, '⛔ حدث خطأ ⛔')
+    
+    finally:
+        print(logMessage)
+
+
+@bot.message_handler(commands=['rand_show'])
+def randomShow(message):
+    userID = message.from_user.id
+
+    try:
+        pageNum = random.randrange(1, 10)
+        index = random.randrange(0, 12)
+        eb = EgyBest()
+        show = eb.getTopShowsPage(pageNum)[index]
+        
+        logMessage = f'The User [{userID}] Sent A /rand_show Request and The Bot Chose \"{show.title}\"'
+        requestSeasons(userID, show)
+    
+    except Exception as exception:
+        logMessage = f'Error Occurred During a /rand_show Request By The User [{userID}]: {exception}'
+        bot.reply_to(message, '⛔ حدث خطأ ⛔')
+    
+    finally:
+        print(logMessage)
 
 
 @bot.message_handler(func=lambda msg: msg.text is not None and msg.text[0] != '/')
@@ -112,7 +136,8 @@ def handleCallback(call):
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
             if index == 0:
-                show = search(showTitle, includeMovies=False, timeout=10, retries=3)[0]
+                eb = EgyBest()
+                show = eb.search(showTitle, includeMovies=False)[0]
                 requestSeasons(userID, show, messageID)
             
             elif index == 1:
@@ -136,8 +161,9 @@ def handleCallback(call):
 
 def searchEgyBest(userID, query, message, includeMovies=True, includeShows=True):
     try:
-        if len(query) < 64:
-            results = search(query, includeMovies=includeMovies, includeShows=includeShows, timeout=10, retries=3)
+        if len(query) < 128:
+            eb = EgyBest()
+            results = eb.search(query, includeMovies=includeMovies, includeShows=includeShows)
             
             if len(results) > 0:
                 result = results[0]
