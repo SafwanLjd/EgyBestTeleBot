@@ -48,15 +48,19 @@ def helpCommand(message):
     print(f'The User [{userID}] Sent A /help Request')
 
 
-@bot.message_handler(commands=['movie', 'show'], func=lambda msg: len(msg.text.strip().split(' ')) > 1)
+@bot.message_handler(commands=['movie', 'show'])
 def exclusiveSearch(message):
     userID = message.from_user.id
     text = message.text.strip()
     words = text.split(' ')
-    query = ' '.join(words[1:])
     command = words[0]
-    print(f'The User [{userID}] Sent \"{text}\"')
-    searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
+    if len(words) > 1:
+        query = ' '.join(words[1:])
+        print(f'The User [{userID}] Sent \"{text}\"')
+        searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
+    else:
+        example = 'Silicon Valley' if command == '/show' else 'Pulp Fiction'
+        bot.reply_to(message, f'يرجى كتابة الاسم الذي تريد البحث عنه بجانب الأمر 😁\n\nمثلًا:\n{command} {example}')
 
 
 @bot.message_handler(commands=['rand_movie'])
@@ -125,8 +129,8 @@ def handleCallback(call):
         yamlData = yaml.safe_load(call.message.caption)
         showLink = links[0].url
         showTitle = yamlData['الاسم']
-        show = Show(showLink)
         if requestType == 'S':
+            show = Show(showLink)
             season = show.getSeasons()[index]
             requestEpisodes(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, season=season)
         elif requestType == 'E':
@@ -136,19 +140,14 @@ def handleCallback(call):
             episode = season.getEpisodes()[index]
             requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
+            show = Show(showLink)
             if index == 0:
-                eb = EgyBest(EGYBEST_MIRROR)
-                show = eb.search(showTitle, includeMovies=False)[0]
                 requestSeasons(userID, show, messageID)
-            
+
             elif index == 1:
                 seasonLink = links[1].url
-                seasons = show.getSeasons()
-
-                for i in range(len(seasons)):
-                    if seasons[i].link == seasonLink:
-                        season = seasons[i]
-                        break
+                seasonTitle = yamlData['الموسم']
+                season = Season(seasonLink, title=seasonTitle)
 
                 requestEpisodes(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, season=season)
         else:
@@ -193,7 +192,7 @@ def requestSeasons(userID, show, messageID=None):
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(seasons[i].title, callback_data=('S' + str(i))))
     
-    show.refreshMetadata(posterOnly=True)
+    show.refreshMetadata(posterOnly=(not messageID))
     msgCaption = generateMessageCaption(show.link, show.title, rating=show.rating)
 
     if not messageID:
