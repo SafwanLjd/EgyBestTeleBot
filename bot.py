@@ -64,7 +64,7 @@ def randomSelection(message):
     userID = message.from_user.id
     
     isMovie = bool(random.getrandbits(1))
-    rand = random.randrange(0, 250)
+    rand = random.randrange(0, 100)
 
     imdbInstance = imdb.IMDb()
     if isMovie:
