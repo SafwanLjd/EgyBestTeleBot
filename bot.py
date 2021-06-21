@@ -68,7 +68,7 @@ def randomMovie(message):
     userID = message.from_user.id
 
     try:
-        pageNum = random.randrange(1, 10)
+        pageNum = random.randrange(1, 16)
         index = random.randrange(0, 12)
         eb = EgyBest(EGYBEST_MIRROR)
         movie = eb.getTopMoviesPage(pageNum)[index]
@@ -90,7 +90,7 @@ def randomShow(message):
 
     try:
         pageNum = random.randrange(1, 10)
-        index = random.randrange(0, 12)
+        index = random.randrange(0, 16)
         eb = EgyBest(EGYBEST_MIRROR)
         show = eb.getTopShowsPage(pageNum)[index]
         
