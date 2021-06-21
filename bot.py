@@ -145,7 +145,8 @@ def handleCallback(call):
         else:
             bot.delete_message(userID, messageID)
             bot.send_message(userID, '⛔ حدث خطأ ⛔')
-    except Exception as e:
+    except Exception as exception:
+        print(f'Error: {exception}')
         callbackAnswer = '⛔ حدث خطأ ⛔'
 
     bot.answer_callback_query(call.id, text=callbackAnswer)
