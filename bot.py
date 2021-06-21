@@ -54,51 +54,43 @@ def exclusiveSearch(message):
     text = message.text.strip()
     words = text.split(' ')
     command = words[0]
+
     if len(words) > 1:
         query = ' '.join(words[1:])
         print(f'The User [{userID}] Sent \"{text}\"')
         searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
+
     else:
         example = 'Silicon Valley' if command == '/show' else 'Pulp Fiction'
         bot.reply_to(message, f'يرجى كتابة الاسم الذي تريد البحث عنه بجانب الأمر 😁\n\nمثلًا:\n{command} {example}')
 
 
-@bot.message_handler(commands=['rand_movie'])
-def randomMovie(message):
+@bot.message_handler(commands=['rand_show', 'rand_movie'])
+def randomSelection(message):
     userID = message.from_user.id
-
-    try:
-        pageNum = random.randrange(1, 16)
-        index = random.randrange(0, 12)
-        eb = EgyBest(EGYBEST_MIRROR)
-        movie = eb.getTopMoviesPage(pageNum)[index]
-        
-        logMessage = f'The User [{userID}] Sent A /rand_movie Request and The Bot Chose \"{movie.title}\"'
-        requestMediaLinks(userID, episode=movie, isMovie=True)
-    
-    except Exception as exception:
-        logMessage = f'Error Occurred During a /rand_movie Request By The User [{userID}]: {exception}'
-        bot.reply_to(message, '⛔ حدث خطأ ⛔')
-    
-    finally:
-        print(logMessage)
-
-
-@bot.message_handler(commands=['rand_show'])
-def randomShow(message):
-    userID = message.from_user.id
+    command = message.text.strip().split(' ')[0]
 
     try:
         pageNum = random.randrange(1, 10)
         index = random.randrange(0, 16)
+
         eb = EgyBest(EGYBEST_MIRROR)
-        show = eb.getTopShowsPage(pageNum)[index]
         
-        logMessage = f'The User [{userID}] Sent A /rand_show Request and The Bot Chose \"{show.title}\"'
-        requestSeasons(userID, show)
+        if command == '/rand_show':
+            selection = eb.getTopShowsPage(pageNum)[index]
+            requestSeasons(userID, selection)
+        
+        elif command == '/rand_movie':
+            selection = eb.getTopMoviesPage(pageNum)[index]
+            requestMediaLinks(userID, episode=selection, isMovie=True)
+
+        else:
+            raise SyntaxError('The Command Should Be The First Thing in The Message')
+
+        logMessage = f'The User [{userID}] Sent A {command} Request and The Bot Chose \"{selection.title}\"'
     
     except Exception as exception:
-        logMessage = f'Error Occurred During a /rand_show Request By The User [{userID}]: {exception}'
+        logMessage = f'Error Occurred During a {command} Request By The User [{userID}]: {exception}'
         bot.reply_to(message, '⛔ حدث خطأ ⛔')
     
     finally:
