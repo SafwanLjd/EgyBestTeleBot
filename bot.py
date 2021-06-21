@@ -87,7 +87,7 @@ def randomSelection(message):
         logMessage = f'The User [{userID}] Sent A {command} Request and The Bot Chose \"{selection.title}\"'
     
     except Exception as exception:
-        logMessage = f'Error Occurred During a {command} Request By The User [{userID}]: {exception}'
+        logMessage = f'Exception Occurred During a {command} Request By The User [{userID}]: {exception}'
         bot.reply_to(message, '⛔ حدث خطأ ⛔')
     
     finally:
@@ -146,7 +146,7 @@ def handleCallback(call):
             bot.delete_message(userID, messageID)
             bot.send_message(userID, '⛔ حدث خطأ ⛔')
     except Exception as exception:
-        print(f'Error: {exception}')
+        print(f'Exception: {exception}')
         callbackAnswer = '⛔ حدث خطأ ⛔'
 
     bot.answer_callback_query(call.id, text=callbackAnswer)
@@ -240,6 +240,9 @@ def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, sea
 
 
 def generateMessageCaption(link, title, seasonLink=None, seasonNum=None, episodeLink=None, episodeNum=None, rating=None):
+    if ':' in title:
+        title = f'\"{title}\"'
+
     caption = f'الاسم: [{title}]({link})'
     
     if seasonNum and seasonLink:
