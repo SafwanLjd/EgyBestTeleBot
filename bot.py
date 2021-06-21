@@ -179,7 +179,7 @@ def requestSeasons(userID, show, messageID=None):
 
     buttons = InlineKeyboardMarkup()
     for i in range(len(seasons)):
-        buttons.add(InlineKeyboardButton(seasons[i].title, callback_data=('S' + str(i))))
+        buttons.add(InlineKeyboardButton(' '.join(seasons[i].title.split(' ')[-2:]), callback_data=('S' + str(i))))
     
     show.refreshMetadata(posterOnly=(not messageID))
     msgCaption = generateMessageCaption(show.link, show.title, rating=show.rating)
