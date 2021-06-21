@@ -116,20 +116,20 @@ def handleCallback(call):
     
     try:
         yamlData = yaml.safe_load(call.message.caption)
-        showLink = links[0].url
-        showTitle = yamlData['الاسم']
+        link = links[0].url
+        title = yamlData['الاسم']
         if requestType == 'S':
-            show = Show(showLink)
+            show = Show(link)
             season = show.getSeasons()[index]
-            requestEpisodes(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, season=season)
+            requestEpisodes(userID, messageID=messageID, showLink=link, showTitle=title, season=season)
         elif requestType == 'E':
             seasonLink = links[1].url
             seasonNum = yamlData['الموسم']
             season = Season(seasonLink)
             episode = season.getEpisodes()[index]
-            requestMediaLinks(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
+            requestMediaLinks(userID, messageID=messageID, showLink=link, showTitle=title, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
         elif requestType == 'B':
-            show = Show(showLink)
+            show = Show(link)
             if index == 0:
                 requestSeasons(userID, show, messageID)
 
@@ -138,7 +138,10 @@ def handleCallback(call):
                 seasonTitle = yamlData['الموسم']
                 season = Season(seasonLink, title=seasonTitle)
 
-                requestEpisodes(userID, messageID=messageID, showLink=showLink, showTitle=showTitle, season=season)
+                requestEpisodes(userID, messageID=messageID, showLink=link, showTitle=title, season=season)
+        elif requestType == 'X':
+            bot.delete_message(userID, messageID)
+            callbackAnswer = 'تم الإغلاق ✅'
         else:
             bot.delete_message(userID, messageID)
             bot.send_message(userID, '⛔ حدث خطأ ⛔')
@@ -180,7 +183,8 @@ def requestSeasons(userID, show, messageID=None):
     buttons = InlineKeyboardMarkup()
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(' '.join(seasons[i].title.split(' ')[-2:]), callback_data=('S' + str(i))))
-    
+    buttons.add(InlineKeyboardButton('إغلاق ✖', callback_data='X'))
+
     show.refreshMetadata(posterOnly=(not messageID))
     msgCaption = generateMessageCaption(show.link, show.title, rating=show.rating)
 
@@ -226,6 +230,7 @@ def requestMediaLinks(userID, messageID=None, showLink=None, showTitle=None, sea
         buttons.add(InlineKeyboardButton(str(src.quality) + 'p', url=src.link))
 
     if isMovie:
+        buttons.add(InlineKeyboardButton('إغلاق ✖', callback_data='X'))
         episode.refreshMetadata(posterOnly=True)
         bot.send_photo(userID, episode.posterURL, caption= generateMessageCaption(episode.link, episode.title, rating=episode.rating), reply_markup=buttons, parse_mode='Markdown')
     else:
