@@ -186,15 +186,15 @@ def requestSeasons(userID, show, messageID=None):
 
     if not messageID:
         try:
-            bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
+            message = bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
         except:
-            try:
-                print(f'Couldn\'t Fetch The Poster of \"{show.title}\"')
-                image = open('noimage.jpg', 'rb').read()
-                bot.send_photo(userID, image, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
-            except IOError:
-                print(f'Couldn\'t Read \"noimage.jpg\"')
-                bot.send_message(userID, '⛔ حدث خطأ ⛔')
+            print(f'Couldn\'t Fetch The Poster of \"{show.title}\"')
+            image = open('noimage.jpg', 'rb').read()
+            message = bot.send_photo(userID, image, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
+
+        if len(seasons) == 1:
+            requestEpisodes(userID, message.id, show.link, show.title, seasons[0])
+
     else:
         try:
             bot.edit_message_media(InputMediaPhoto(show.posterURL), chat_id=userID, message_id=messageID)
