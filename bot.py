@@ -54,15 +54,26 @@ def exclusiveSearch(message):
     text = message.text.strip()
     words = text.split(' ')
     command = words[0]
+    
+    includeMovies = True
+    includeShows = True
+
+    if command == '/show':
+        example = 'Game of Thrones'
+        searchType = 'مسلسل'
+        includeMovies = False
+    else:
+        example = 'Pulp Fiction'
+        searchType = 'فيلم'
+        includeShows = False
 
     if len(words) > 1:
         query = ' '.join(words[1:])
         print(f'The User [{userID}] Sent \"{text}\"')
-        searchEgyBest(userID, query, message, includeShows=(command == '/show'), includeMovies=(command == '/movie'))
+        searchEgyBest(userID, query, message, includeShows=includeShows, includeMovies=includeMovies)
 
     else:
-        example = 'Silicon Valley' if command == '/show' else 'Pulp Fiction'
-        bot.reply_to(message, f'يرجى كتابة الاسم الذي تريد البحث عنه بجانب الأمر 😁\n\nمثلًا:\n{command} {example}')
+        bot.reply_to(message, f'اكتب اسم ال{searchType} بجانب الأمر 😁\n\nهكذا:\n`{command} {example}`', parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['rand_show', 'rand_movie'])
@@ -94,7 +105,7 @@ def randomSelection(message):
         print(logMessage)
 
 
-@bot.message_handler(func=lambda msg: msg.text is not None and msg.text[0] != '/')
+@bot.message_handler(func=lambda msg: msg.text and msg.text[0] != '/')
 def handleMessages(message):
     userID = message.from_user.id
     text = message.text.strip()
