@@ -4,7 +4,7 @@ certifi==2021.5.30
 chardet==4.0.0
 click==8.0.1
 colorama==0.4.4
-egybest==2.0
+egybest==2.1
 Flask==2.0.1
 greenlet==1.1.0
 idna==2.10
