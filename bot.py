@@ -80,12 +80,9 @@ def randomSelection(message):
             selection = eb.getTopShowsPage(pageNum)[index]
             requestSeasons(userID, selection)
         
-        elif command == '/rand_movie':
+        else:
             selection = eb.getTopMoviesPage(pageNum)[index]
             requestMediaLinks(userID, episode=selection, isMovie=True)
-
-        else:
-            raise SyntaxError('The Command Should Be The First Thing in The Message')
 
         logMessage = f'The User [{userID}] Sent A {command} Request and The Bot Chose \"{selection.title}\"'
     
