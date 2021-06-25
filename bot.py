@@ -82,7 +82,7 @@ def randomSelection(message):
     command = message.text.strip().split(' ')[0]
 
     try:
-        pageNum = random.randrange(1, 16)
+        pageNum = random.randrange(1, 26)
         index = random.randrange(0, 12)
 
         eb = EgyBest(EGYBEST_MIRROR)
