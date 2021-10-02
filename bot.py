@@ -209,7 +209,6 @@ def requestSeasons(userID, show, messageID=None):
     if not messageID:
         try:
             message = bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
-            bot.send_message(1102914844, "Debugging: " + str(message.id))
         
         except:
             print(f'Couldn\'t Fetch The Poster of \"{show.title}\"')
