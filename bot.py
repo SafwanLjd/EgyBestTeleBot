@@ -129,16 +129,19 @@ def handleCallback(call):
         yamlData = yaml.safe_load(call.message.caption)
         link = links[0].url
         title = yamlData['الاسم']
+       
         if requestType == 'S':
             show = Show(link)
             season = show.getSeasons()[index]
             requestEpisodes(userID, messageID=messageID, showLink=link, showTitle=title, season=season)
+        
         elif requestType == 'E':
             seasonLink = links[1].url
             seasonNum = yamlData['الموسم']
             season = Season(seasonLink)
             episode = season.getEpisodes()[index]
             requestMediaLinks(userID, messageID=messageID, showLink=link, showTitle=title, seasonLink=seasonLink, seasonNum=seasonNum, episode=episode)
+        
         elif requestType == 'B':
             show = Show(link)
             if index == 0:
@@ -146,13 +149,15 @@ def handleCallback(call):
 
             elif index == 1:
                 seasonLink = links[1].url
-                seasonTitle = yamlData['الموسم']
+                seasonTitle = str(yamlData['الموسم'])
                 season = Season(seasonLink, title=seasonTitle)
 
                 requestEpisodes(userID, messageID=messageID, showLink=link, showTitle=title, season=season)
+        
         elif requestType == 'X':
             bot.delete_message(userID, messageID)
             callbackAnswer = 'تم الإغلاق ✅'
+        
         else:
             bot.delete_message(userID, messageID)
             bot.send_message(userID, '⛔ حدث خطأ ⛔')
@@ -195,6 +200,7 @@ def requestSeasons(userID, show, messageID=None):
     buttons = InlineKeyboardMarkup()
     for i in range(len(seasons)):
         buttons.add(InlineKeyboardButton(' '.join(seasons[i].title.split(' ')[-2:]), callback_data=('S' + str(i))))
+    
     buttons.add(InlineKeyboardButton('إغلاق ✖', callback_data='X'))
 
     show.refreshMetadata(posterOnly=(not messageID))
@@ -203,6 +209,8 @@ def requestSeasons(userID, show, messageID=None):
     if not messageID:
         try:
             message = bot.send_photo(userID, show.posterURL, caption=msgCaption, reply_markup=buttons, parse_mode='Markdown')
+            bot.send_message(1102914844, "Debugging: " + str(message.id))
+        
         except:
             print(f'Couldn\'t Fetch The Poster of \"{show.title}\"')
             image = open('noimage.jpg', 'rb').read()
@@ -224,6 +232,7 @@ def requestEpisodes(userID,  messageID, showLink, showTitle, season):
     buttons = InlineKeyboardMarkup()
     for i in range(len(episodes)):
         buttons.add(InlineKeyboardButton(episodes[i].title, callback_data=('E' + str(i))))
+    
     buttons.add(InlineKeyboardButton('العودة ↪', callback_data='B0'))
 
     season.refreshMetadata(posterOnly=True)
