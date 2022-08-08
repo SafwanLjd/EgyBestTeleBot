@@ -10,7 +10,7 @@ import os
 
 EGYBEST_MIRROR = os.environ['EGYBEST_MIRROR']
 
-TOKEN = os.environ['TOKEN']
+TOKEN = os.environ['5517618542:AAFTB3Gp7kY-WtiyqidkY5Gi3TzrdxWNRew']
 bot = telebot.TeleBot(token=TOKEN)
 
 server = Flask(__name__)
