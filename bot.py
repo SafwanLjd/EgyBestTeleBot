@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaPhoto
 from flask import Flask, request, redirect
 from waitress import serve
